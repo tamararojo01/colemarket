@@ -1,13 +1,7 @@
 {
   "name": "Colemarket • Flutter Web",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "features": {
-    "ghcr.io/devcontainers/features/flutter:1": {
-      "version": "latest",
-      "channel": "stable"
-    }
-  },
-  "postCreateCommand": "flutter --version && flutter precache --web && flutter config --enable-web && dart --version",
+  "postCreateCommand": "bash .devcontainer/setup.sh && flutter --version && flutter precache --web && flutter config --enable-web",
   "forwardPorts": [5173],
   "portsAttributes": {
     "5173": { "label": "Flutter Web", "onAutoForward": "openBrowser" }
