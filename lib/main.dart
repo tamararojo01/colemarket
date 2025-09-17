@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'models.dart';
 import 'mock_data.dart';
 
@@ -51,40 +52,56 @@ class AppState {
       conversations: conversations ?? this.conversations,
       user: user ?? this.user,
       selectedSchoolId: selectedSchoolId ?? this.selectedSchoolId,
-      selectedGarmentId: selectedGarmentId,
-      selectedSize: selectedSize,
+      selectedGarmentId: selectedGarmentId ?? this.selectedGarmentId,
+      selectedSize: selectedSize ?? this.selectedSize,
     );
   }
 }
 
-class AppNotifier extends StateNotifier<AppState> {
-  AppNotifier()
-      : super(AppState(
-          listings: List.of(mockListings),
-          conversations: List.of(mockConversations),
-          user: AppUser(id: 'u1', email: 'demo@colemaket.app', phone: null, address: null, defaultSchoolId: 'trinity'),
-          selectedSchoolId: 'trinity',
-        ));
+/// Riverpod 2.x: Notifier en lugar de StateNotifier
+class AppNotifier extends Notifier<AppState> {
+  @override
+  AppState build() {
+    return AppState(
+      listings: List<Listing>.of(mockListings),
+      conversations: List<Conversation>.of(mockConversations),
+      user: AppUser(
+        id: 'u1',
+        email: 'demo@colemaket.app',
+        phone: null,
+        address: null,
+        defaultSchoolId: 'trinity',
+      ),
+      selectedSchoolId: 'trinity',
+    );
+  }
 
-  void setSchool(String id) => state = state.copyWith(selectedSchoolId: id, selectedGarmentId: null, selectedSize: null);
-  void setGarment(String? id) => state = state.copyWith(selectedGarmentId: id, selectedSize: null);
-  void setSize(String? size) => state = state.copyWith(selectedSize: size);
+  void setSchool(String id) =>
+      state = state.copyWith(selectedSchoolId: id, selectedGarmentId: null, selectedSize: null);
+
+  void setGarment(String? id) =>
+      state = state.copyWith(selectedGarmentId: id, selectedSize: null);
+
+  void setSize(String? size) =>
+      state = state.copyWith(selectedSize: size);
 
   void toggleFavorite(String listingId) {
-    final updated = state.listings.map((l) => l.id == listingId ? l.copyWith(isFavorite: !l.isFavorite) : l).toList();
+    final updated = state.listings
+        .map((l) => l.id == listingId ? l.copyWith(isFavorite: !l.isFavorite) : l)
+        .toList();
     state = state.copyWith(listings: updated);
   }
 
-  void addListing(Listing listing) {
-    state = state.copyWith(listings: [listing, ...state.listings]);
-  }
+  void addListing(Listing listing) =>
+      state = state.copyWith(listings: <Listing>[listing, ...state.listings]);
 
-  void updateProfile({String? email, String? phone, String? address}) {
-    state = state.copyWith(user: state.user.copyWith(email: email, phone: phone, address: address));
-  }
+  void updateProfile({String? email, String? phone, String? address}) =>
+      state = state.copyWith(
+        user: state.user.copyWith(email: email, phone: phone, address: address),
+      );
 }
 
-final appProvider = StateNotifierProvider<AppNotifier, AppState>((ref) => AppNotifier());
+final appProvider = NotifierProvider<AppNotifier, AppState>(AppNotifier.new);
 
 final _routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -94,8 +111,14 @@ final _routerProvider = Provider<GoRouter>((ref) {
         path: '/',
         builder: (ctx, s) => const Shell(),
         routes: [
-          GoRoute(path: 'details/:id', builder: (ctx, s) => AdDetailsPage(listingId: s.pathParameters['id']!)),
-          GoRoute(path: 'chat/:id', builder: (ctx, s) => ChatPage(conversationId: s.pathParameters['id']!)),
+          GoRoute(
+            path: 'details/:id',
+            builder: (ctx, s) => AdDetailsPage(listingId: s.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'chat/:id',
+            builder: (ctx, s) => ChatPage(conversationId: s.pathParameters['id']!),
+          ),
         ],
       ),
     ],
@@ -125,14 +148,15 @@ class Shell extends ConsumerStatefulWidget {
 
 class _ShellState extends ConsumerState<Shell> {
   int index = 0;
+
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      const HomePage(),
-      const FavoritesPage(),
-      const PublishPage(),
-      const MessagesPage(),
-      const ProfilePage(),
+    final pages = const [
+      HomePage(),
+      FavoritesPage(),
+      PublishPage(),
+      MessagesPage(),
+      ProfilePage(),
     ];
     return Scaffold(
       body: pages[index],
@@ -209,7 +233,7 @@ class HomePage extends ConsumerWidget {
                             const DropdownMenuItem(value: null, child: Text('Todas')),
                             ...garments.map((g) => DropdownMenuItem(value: g.id, child: Text(g.label))),
                           ],
-                          onChanged: (v) => notifier.setGarment(v),
+                          onChanged: notifier.setGarment,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -220,20 +244,26 @@ class HomePage extends ConsumerWidget {
                           items: [
                             const DropdownMenuItem(value: null, child: Text('Todas')),
                             if (state.selectedGarmentId == null)
-                              ...garments.expand((g) => g.sizes).toSet().map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                              ...garments
+                                  .expand((g) => g.sizes)
+                                  .toSet()
+                                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                             else
-                              ...garments.firstWhere((g) => g.id == state.selectedGarmentId).sizes.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+                              ...garments
+                                  .firstWhere((g) => g.id == state.selectedGarmentId)
+                                  .sizes
+                                  .map((s) => DropdownMenuItem(value: s, child: Text(s))),
                           ],
-                          onChanged: (v) => notifier.setSize(v),
+                          onChanged: notifier.setSize,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
+                  const Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: const [
+                    children: [
                       FilterChip(label: Text('Solo activos'), selected: true, onSelected: null),
                       FilterChip(label: Text('Precio ≤ 10 €'), selected: false, onSelected: null),
                     ],
@@ -290,7 +320,7 @@ class HomePage extends ConsumerWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 3/4,
+                childAspectRatio: 3 / 4,
               ),
             ),
           ),
@@ -386,7 +416,10 @@ class _PublishPageState extends ConsumerState<PublishPage> {
               value: garmentId,
               decoration: const InputDecoration(labelText: 'Prenda'),
               items: garments.map((g) => DropdownMenuItem(value: g.id, child: Text(g.label))).toList(),
-              onChanged: (v) => setState(() { garmentId = v; size = null; }),
+              onChanged: (v) => setState(() {
+                garmentId = v;
+                size = null;
+              }),
               validator: (v) => v == null ? 'Selecciona una prenda' : null,
             ),
             const SizedBox(height: 12),
@@ -394,8 +427,8 @@ class _PublishPageState extends ConsumerState<PublishPage> {
               value: size,
               decoration: const InputDecoration(labelText: 'Talla'),
               items: (garmentId == null ? <String>[] : garments.firstWhere((g) => g.id == garmentId).sizes)
-                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                .toList(),
+                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                  .toList(),
               onChanged: (v) => setState(() => size = v),
               validator: (v) => v == null ? 'Selecciona una talla' : null,
             ),
@@ -403,7 +436,9 @@ class _PublishPageState extends ConsumerState<PublishPage> {
             DropdownButtonFormField<Condition>(
               value: condition,
               decoration: const InputDecoration(labelText: 'Estado'),
-              items: Condition.values.map((c) => DropdownMenuItem(value: c, child: Text(conditionLabels[c]!))).toList(),
+              items: Condition.values
+                  .map((c) => DropdownMenuItem(value: c, child: Text(conditionLabels[c]!)))
+                  .toList(),
               onChanged: (v) => setState(() => condition = v ?? Condition.good),
             ),
             const SizedBox(height: 12),
@@ -459,15 +494,21 @@ class _PublishPageState extends ConsumerState<PublishPage> {
                     size: size!,
                     price: price,
                     condition: condition,
-                    defects: [if (hasFix && (fixText?.isNotEmpty ?? false)) 'Arreglo: ${fixText!}', if (hasInfo && (extraInfo?.isNotEmpty ?? false)) extraInfo!],
+                    defects: [
+                      if (hasFix && (fixText?.isNotEmpty ?? false)) 'Arreglo: ${fixText!}',
+                      if (hasInfo && (extraInfo?.isNotEmpty ?? false)) extraInfo!,
+                    ],
                   );
                   ref.read(appProvider.notifier).addListing(listing);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Anuncio publicado')));
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text('Anuncio publicado')));
                     Navigator.of(context).pop();
                   }
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completa el formulario y confirma la calidad')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Completa el formulario y confirma la calidad')),
+                  );
                 }
               },
               icon: const Icon(Icons.cloud_upload),
@@ -521,7 +562,12 @@ class ChatPage extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                Expanded(child: TextField(controller: controller, decoration: const InputDecoration(hintText: 'Escribe un mensaje...'))),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(hintText: 'Escribe un mensaje...'),
+                  ),
+                ),
                 IconButton(onPressed: () {}, icon: const Icon(Icons.send)),
               ],
             ),
@@ -591,8 +637,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 FilledButton(
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {
-                      ref.read(appProvider.notifier).updateProfile(email: email, phone: phone, address: address);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Perfil actualizado')));
+                      ref.read(appProvider.notifier).updateProfile(
+                            email: email,
+                            phone: phone,
+                            address: address,
+                          );
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(const SnackBar(content: Text('Perfil actualizado')));
                     }
                   },
                   child: const Text('Guardar perfil'),
@@ -605,16 +656,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             children: [
               Text('Mis anuncios', style: Theme.of(context).textTheme.titleLarge),
               const Spacer(),
-              FilledButton.tonal(onPressed: () => {}, child: const Text('Ver todo')),
+              FilledButton.tonal(onPressed: () {}, child: const Text('Ver todo')),
             ],
           ),
           const SizedBox(height: 8),
-          ...myListings.map((l) => ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.image)),
-                title: Text('${l.title} · ${l.size}'),
-                subtitle: Text('${l.price.toStringAsFixed(2)} €'),
-                trailing: Switch(value: l.active, onChanged: (_) {}),
-              )),
+          ...myListings.map(
+            (l) => ListTile(
+              leading: const CircleAvatar(child: Icon(Icons.image)),
+              title: Text('${l.title} · ${l.size}'),
+              subtitle: Text('${l.price.toStringAsFixed(2)} €'),
+              trailing: Switch(value: l.active, onChanged: (_) {}),
+            ),
+          ),
         ],
       ),
     );
@@ -624,6 +677,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 class AdDetailsPage extends ConsumerWidget {
   final String listingId;
   const AdDetailsPage({super.key, required this.listingId});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listing = ref.watch(appProvider).listings.firstWhere((l) => l.id == listingId);
@@ -633,7 +687,7 @@ class AdDetailsPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           AspectRatio(
-            aspectRatio: 16/9,
+            aspectRatio: 16 / 9,
             child: Container(
               alignment: Alignment.center,
               color: Theme.of(context).colorScheme.surfaceVariant,
@@ -647,18 +701,23 @@ class AdDetailsPage extends ConsumerWidget {
             children: [
               Chip(label: Text(conditionLabels[listing.condition]!)),
               const SizedBox(width: 8),
-              if (listing.defects.isNotEmpty) ...listing.defects.map((d) => Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Chip(label: Text(d)),
-              )),
+              if (listing.defects.isNotEmpty)
+                ...listing.defects.map(
+                  (d) => Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Chip(label: Text(d)),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 6),
-          Text('Precio: ${listing.price.toStringAsFixed(2)} €', style: Theme.of(context).textTheme.titleLarge),
+          Text('Precio: ${listing.price.toStringAsFixed(2)} €',
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Abrir chat con vendedor (demo)')));
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('Abrir chat con vendedor (demo)')));
             },
             icon: const Icon(Icons.chat_bubble),
             label: const Text('Chatear con el vendedor'),
