@@ -1,0 +1,12 @@
+
+.dart_tool/
+.packages
+.idea/
+.vscode/
+build/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+*.lock
+.DS_Store
+pubspec.lock
