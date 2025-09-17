@@ -10,3 +10,4 @@ ios/Pods/
 *.lock
 .DS_Store
 pubspec.lock
+flutter/
