@@ -1,17 +1,29 @@
-
 {
-  "name": "ColeMarket",
-  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "name": "Colemarket • Flutter Web",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {},
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers-contrib/features/fnm:1": {}
+    "ghcr.io/devcontainers/features/flutter:1": {
+      "version": "latest",
+      "channel": "stable"
+    }
   },
-  "postCreateCommand": "bash .devcontainer/setup.sh",
-   "forwardPorts": [5173],
+  "postCreateCommand": "flutter --version && flutter precache --web && flutter config --enable-web && dart --version",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "Flutter Web", "onAutoForward": "openBrowser" }
+  },
   "customizations": {
     "vscode": {
-      "extensions": ["Dart-Code.dart-code", "Dart-Code.flutter"]
+      "extensions": [
+        "Dart-Code.dart-code",
+        "Dart-Code.flutter",
+        "EditorConfig.EditorConfig"
+      ],
+      "settings": {
+        "dart.lineLength": 100,
+        "files.eol": "\n",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
     }
   }
 }
