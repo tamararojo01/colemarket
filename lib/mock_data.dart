@@ -26,7 +26,7 @@ final mockListings = <Listing>[
   Listing(
     id: 'l1',
     userId: 'u2',
-    schoolId: 'trinity',
+    schoolId: 'trinity-sanse',
     garmentId: 'polo',
     title: 'Polo blanco',
     size: '10',
@@ -39,7 +39,7 @@ final mockListings = <Listing>[
   Listing(
     id: 'l2',
     userId: 'u3',
-    schoolId: 'trinity',
+    schoolId: 'trinity-sanse',
     garmentId: 'falda',
     title: 'Falda tablas',
     size: '12',

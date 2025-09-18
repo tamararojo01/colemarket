@@ -76,7 +76,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           children: [
             Text('Mis anuncios', style: Theme.of(context).textTheme.titleLarge),
             const Spacer(),
-            FilledButton.tonal(onPressed: () {}, child: const Text('Ver todo')),
+            FilledButton(onPressed: () => {}, child: const Text('Ver todo')),
           ],
         ),
         const SizedBox(height: 8),

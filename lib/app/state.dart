@@ -61,7 +61,7 @@ class AppNotifier extends Notifier<AppState> {
         address: null,
         defaultSchoolId: 'trinity',
       ),
-      selectedSchoolId: 'trinity',
+      selectedSchoolId: 'trinity-sanse',
       showOnlyActive: true,
       priceUnder10: false,
     );

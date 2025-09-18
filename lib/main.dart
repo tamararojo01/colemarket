@@ -29,6 +29,7 @@ class ColeMarketApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
+      themeMode: ThemeMode.light,
       routerConfig: router,
     );
   }

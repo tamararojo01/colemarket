@@ -11,13 +11,14 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: true
+  group: 'pages'
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+      REPO_NAME: ${{ github.event.repository.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,24 +26,18 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable  # o una versión concreta con: flutter-version: '3.24.0'
+          channel: 'stable'
 
-      - name: Cache pub packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
+      - name: Flutter version
+        run: flutter --version
 
-      - name: Flutter pub get
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Build Flutter Web (release)
-        # Para GitHub Pages en repositorio de proyecto, el base-href debe ser /<repo>/
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+      - name: Build web
+        run: flutter build web --release --base-href "/${{ env.REPO_NAME }}/"
 
-      - name: Upload artifact to Pages
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
@@ -53,7 +48,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
