@@ -64,7 +64,7 @@ class _PublishPageState extends ConsumerState<PublishPage> {
         padding: const EdgeInsets.all(16),
         children: [
           DropdownButtonFormField<String>(
-            value: schoolId,
+            initialValue: schoolId,
             isExpanded: true,
             dropdownColor: Colors.white,
             menuMaxHeight: 360,
@@ -74,7 +74,7 @@ class _PublishPageState extends ConsumerState<PublishPage> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: garmentId,
+            initialValue: garmentId,
             isExpanded: true,
             dropdownColor: Colors.white,
             menuMaxHeight: 360,
@@ -86,7 +86,7 @@ class _PublishPageState extends ConsumerState<PublishPage> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             key: ValueKey(garmentId),
-            value: size,
+            initialValue: size,
             isExpanded: true,
             dropdownColor: Colors.white,
             menuMaxHeight: 360,
@@ -101,7 +101,7 @@ class _PublishPageState extends ConsumerState<PublishPage> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<Condition>(
-            value: condition,
+            initialValue: condition,
             isExpanded: true,
             dropdownColor: Colors.white,
             menuMaxHeight: 360,
@@ -174,8 +174,8 @@ class _PublishPageState extends ConsumerState<PublishPage> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: kGreenSoft),
               ),
-              child: Row(
-                children: const [
+              child: const Row(
+                children: [
                   Icon(Icons.photo_camera_outlined, color: kGreen),
                   SizedBox(width: 10),
                   Expanded(

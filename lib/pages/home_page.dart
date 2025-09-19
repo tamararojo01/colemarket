@@ -1,284 +1,131 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../app/state.dart';
-import '../theme.dart';
 import '../data/supabase_repo.dart';
+
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appProvider);
     final notifier = ref.read(appProvider.notifier);
-
+    final provincesAsync = ref.watch(provincesProvider);
     final schoolsAsync = ref.watch(schoolsProvider);
 
-    return schoolsAsync.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error cargando colegios: $e'))),
-      data: (schoolsDb) {
-        if (schoolsDb.isEmpty) {
-          return const Scaffold(body: Center(child: Text('No hay colegios disponibles.')));
-        }
-
-        final preferred = schoolsDb.firstWhere(
-          (s) => s.slug == 'trinity-sanse',
-          orElse: () => schoolsDb.first,
-        );
-
-        String selectedSlug = state.selectedSchoolId;
-        final existsSchool = schoolsDb.any((s) => s.slug == selectedSlug);
-        if (selectedSlug.isEmpty || !existsSchool) {
-          selectedSlug = preferred.slug;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            notifier.setSchool(selectedSlug);
-          });
-        }
-
-        final garmentsAsync = ref.watch(garmentsBySchoolProvider(selectedSlug));
-
-        return garmentsAsync.when(
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (e, _) => Scaffold(body: Center(child: Text('Error cargando prendas: $e'))),
-          data: (garmentsDb) {
-            final garmentExists =
-                garmentsDb.any((g) => g.slug == state.selectedGarmentId);
-            final safeGarmentValue = garmentExists ? state.selectedGarmentId : null;
-
-            final allSizes = <String>{};
-            for (final g in garmentsDb) {
-              allSizes.addAll(g.sizes);
-            }
-            final sortedAllSizes = allSizes.toList()
-              ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-
-            final selectedGarment = garmentsDb
-                .where((g) => g.slug == safeGarmentValue)
-                .cast<GarmentWithSizes?>()
-                .firstWhere((_) => true, orElse: () => null);
-
-            final sizesForDropdown = selectedGarment == null
-                ? sortedAllSizes
-                : (List<String>.from(selectedGarment.sizes)
-                  ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())));
-
-            final sizeExists =
-                state.selectedSize != null && sizesForDropdown.contains(state.selectedSize);
-            final safeSizeValue = sizeExists ? state.selectedSize : null;
-
-            if (safeGarmentValue != state.selectedGarmentId ||
-                safeSizeValue != state.selectedSize) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (safeGarmentValue != state.selectedGarmentId) {
-                  notifier.setGarment(safeGarmentValue);
-                }
-                if (safeSizeValue != state.selectedSize) {
-                  notifier.setSize(safeSizeValue);
-                }
-              });
-            }
-
-            final filtered = ref.watch(appProvider).listings.where((l) {
-              if (state.showOnlyActive && !l.active) return false;
-              if (l.schoolId != selectedSlug) return false;
-              if (safeGarmentValue != null && l.garmentId != safeGarmentValue) return false;
-              if (safeSizeValue != null && l.size != safeSizeValue) return false;
-              if (state.priceUnder10 && l.price > 10.0) return false;
-              return true;
-            }).toList();
-
-            Widget chip({
-              required String text,
-              required bool selected,
-              required ValueChanged<bool> onSelected,
-            }) {
-              return FilterChip(
-                label: Text(text),
-                selected: selected,
-                onSelected: onSelected,
-                showCheckmark: false,
-                backgroundColor: Colors.white,
-                selectedColor: kMintSelected,
-                side: const BorderSide(color: kGreenSoft),
-                shape: const StadiumBorder(),
-                labelStyle: const TextStyle(
-                  color: Colors.black87, fontWeight: FontWeight.w600,
-                ),
-              );
-            }
-
-            final hasGarments = garmentsDb.isNotEmpty;
-
-            // 🔧 FIX: envolvemos en Scaffold para aportar el Material ancestor
-            return Scaffold(
-              body: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ColeMarket'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Card(
+            elevation: 4,
+            margin: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            color: Theme.of(context).colorScheme.surface,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Fila superior: combo de provincias centrado
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: provincesAsync.when(
+                          data: (provinces) {
+                            if (provinces.isEmpty) {
+                              return const Text('No hay provincias disponibles.');
+                            }
+                            return DropdownButtonFormField<String>(
+                              value: state.selectedProvinceId,
+                              decoration: const InputDecoration(
+                                labelText: 'Provincia',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.location_on),
+                              ),
+                              items: buildProvinceItems(provinces),
+                              onChanged: (id) {
+                                if (id != null) notifier.setProvince(id);
+                              },
+                            );
+                          },
+                          loading: () => const LinearProgressIndicator(),
+                          error: (e, _) => Text('Error cargando provincias: $e'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // Contenido principal con scroll si es necesario
+                  Expanded(
+                    child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  value: selectedSlug.isNotEmpty ? selectedSlug : null,
-                                  isExpanded: true,
-                                  dropdownColor: Colors.white,
-                                  menuMaxHeight: 360,
-                                  decoration: const InputDecoration(labelText: 'Colegio'),
-                                  items: schoolsDb
-                                      .map((s) => DropdownMenuItem(
-                                            value: s.slug,
-                                            child: Text(s.name),
-                                          ))
-                                      .toList(),
-                                  onChanged: (v) => notifier.setSchool(v!),
-                                ),
+                          // Combo de colegios
+                          schoolsAsync.when(
+                            data: (schools) => DropdownButtonFormField<String>(
+                              value: state.selectedSchoolId.isEmpty ? null : state.selectedSchoolId,
+                              decoration: const InputDecoration(
+                                labelText: 'Colegio',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.school),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: DropdownButtonFormField<String?>(
-                                  value: safeGarmentValue,
-                                  isExpanded: true,
-                                  dropdownColor: Colors.white,
-                                  menuMaxHeight: 360,
-                                  decoration: const InputDecoration(labelText: 'Prenda'),
-                                  items: [
-                                    const DropdownMenuItem(value: null, child: Text('Todas')),
-                                    ...garmentsDb.map(
-                                      (g) => DropdownMenuItem(
-                                        value: g.slug,
-                                        child: Text(g.name),
-                                      ),
-                                    ),
-                                  ],
-                                  onChanged: hasGarments ? notifier.setGarment : null,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: DropdownButtonFormField<String?>(
-                                  value: safeSizeValue,
-                                  isExpanded: true,
-                                  dropdownColor: Colors.white,
-                                  menuMaxHeight: 360,
-                                  decoration: const InputDecoration(labelText: 'Talla'),
-                                  items: [
-                                    const DropdownMenuItem(value: null, child: Text('Todas')),
-                                    ...sizesForDropdown.map(
-                                      (s) => DropdownMenuItem(value: s, child: Text(s)),
-                                    ),
-                                  ],
-                                  onChanged: hasGarments ? notifier.setSize : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8, runSpacing: 8,
-                            children: [
-                              chip(
-                                text: 'Solo activos',
-                                selected: state.showOnlyActive,
-                                onSelected: (v) => notifier.toggleShowOnlyActive(v),
-                              ),
-                              chip(
-                                text: 'Precio ≤ 10 €',
-                                selected: state.priceUnder10,
-                                onSelected: (v) => notifier.togglePriceUnder10(v),
-                              ),
-                            ],
-                          ),
-                          if (!hasGarments)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                'Aún no hay catálogo de prendas para este colegio.',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
+                              items: buildSchoolItems(schools),
+                              onChanged: (id) {
+                                if (id != null) notifier.setSchool(id);
+                              },
                             ),
+                            loading: () => const LinearProgressIndicator(),
+                            error: (e, _) => Text('Error cargando colegios: $e'),
+                          ),
+                          // Aquí puedes añadir más widgets (grid, etc.)
                         ],
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(12),
-                    sliver: SliverGrid(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final l = filtered[index];
-                          return Card(
-                            clipBehavior: Clip.antiAlias,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .surfaceVariant
-                                        .withOpacity(0.4),
-                                    child: const Icon(Icons.image, size: 40),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('${l.title} · ${l.size}',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context).textTheme.titleMedium),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '${l.price.toStringAsFixed(2)} €',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleSmall!
-                                                .copyWith(fontWeight: FontWeight.w700),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(l.isFavorite
-                                                ? Icons.favorite
-                                                : Icons.favorite_border),
-                                            onPressed: () => ref
-                                                .read(appProvider.notifier)
-                                                .toggleFavorite(l.id),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        childCount: filtered.length,
-                      ),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 220,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 1.0,
                       ),
                     ),
                   ),
                 ],
               ),
-            );
-          },
-        );
-      },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
+
+// Métodos auxiliares fuera de la clase para compatibilidad
+List<DropdownMenuItem<String>> buildProvinceItems(List provincesDb) {
+  final List<DropdownMenuItem<String>> items = <DropdownMenuItem<String>>[];
+  for (var i = 0; i < provincesDb.length; i++) {
+    var p = provincesDb[i];
+    items.add(DropdownMenuItem(
+      value: p.id.toString(),
+      enabled: p.enabled,
+      child: Text(p.name),
+    ));
+  }
+  return items;
+}
+
+List<DropdownMenuItem<String>> buildSchoolItems(List schoolsDb) {
+  final List<DropdownMenuItem<String>> items = <DropdownMenuItem<String>>[];
+  for (var i = 0; i < schoolsDb.length; i++) {
+    var s = schoolsDb[i];
+    items.add(DropdownMenuItem(
+      value: s.slug,
+      child: Text(s.name),
+    ));
+  }
+  return items;
+}
+// Fin de la clase y métodos auxiliares

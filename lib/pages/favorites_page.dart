@@ -17,8 +17,8 @@ class FavoritesPage extends ConsumerWidget {
         return ListTile(
           onTap: () {},
           leading: const CircleAvatar(child: Icon(Icons.image)),
-          title: Text('\${l.title} · \${l.size}'),
-          subtitle: Text('\${l.price.toStringAsFixed(2)} €'),
+          title: const Text('\${l.title} · \${l.size}'),
+          subtitle: const Text('\${l.price.toStringAsFixed(2)} €'),
           trailing: IconButton(
             icon: const Icon(Icons.favorite),
             onPressed: () => ref.read(appProvider.notifier).toggleFavorite(l.id),

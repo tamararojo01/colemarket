@@ -18,7 +18,7 @@ class AdDetailsPage extends ConsumerWidget {
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
               border: const Border(
                 left: BorderSide(color: kGreenSoft, width: 3),
                 right: BorderSide(color: kGreenSoft, width: 3),

@@ -11,6 +11,8 @@ class AppState {
   final String? selectedGarmentId;
   final String? selectedSize;
 
+  final String? selectedProvinceId;
+
   final bool showOnlyActive;
   final bool priceUnder10;
 
@@ -21,6 +23,7 @@ class AppState {
     required this.selectedSchoolId,
     this.selectedGarmentId,
     this.selectedSize,
+    this.selectedProvinceId,
     this.showOnlyActive = true,
     this.priceUnder10 = false,
   });
@@ -32,6 +35,7 @@ class AppState {
     String? selectedSchoolId,
     String? selectedGarmentId,
     String? selectedSize,
+    String? selectedProvinceId,
     bool? showOnlyActive,
     bool? priceUnder10,
   }) {
@@ -42,11 +46,13 @@ class AppState {
       selectedSchoolId: selectedSchoolId ?? this.selectedSchoolId,
       selectedGarmentId: selectedGarmentId ?? this.selectedGarmentId,
       selectedSize: selectedSize ?? this.selectedSize,
+      selectedProvinceId: selectedProvinceId ?? this.selectedProvinceId,
       showOnlyActive: showOnlyActive ?? this.showOnlyActive,
       priceUnder10: priceUnder10 ?? this.priceUnder10,
     );
   }
 }
+
 
 class AppNotifier extends Notifier<AppState> {
   @override
@@ -62,13 +68,18 @@ class AppNotifier extends Notifier<AppState> {
         defaultSchoolId: 'trinity',
       ),
       selectedSchoolId: 'trinity-sanse',
+      selectedProvinceId: null,
       showOnlyActive: true,
       priceUnder10: false,
     );
   }
 
+
+  void setProvince(String id) =>
+    state = state.copyWith(selectedProvinceId: id, selectedSchoolId: '', selectedGarmentId: null, selectedSize: null);
+
   void setSchool(String id) =>
-      state = state.copyWith(selectedSchoolId: id, selectedGarmentId: null, selectedSize: null);
+    state = state.copyWith(selectedSchoolId: id, selectedGarmentId: null, selectedSize: null);
 
   void setGarment(String? id) => state = state.copyWith(selectedGarmentId: id, selectedSize: null);
 

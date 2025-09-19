@@ -1,3 +1,4 @@
+import 'province_row.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -30,8 +31,19 @@ class GarmentWithSizes {
 // ----------------------
 // REPOSITORIO
 // ----------------------
+
 class SupabaseRepo {
   final _db = Supabase.instance.client;
+
+  Future<List<ProvinceRow>> fetchProvinces() async {
+    final rows = await _db
+        .from('provinces')
+        .select('id,name,enabled')
+        .order('name');
+    return (rows as List)
+        .map((e) => ProvinceRow.fromMap(e as Map<String, dynamic>))
+        .toList();
+  }
 
   Future<List<SchoolRow>> fetchEnabledSchools() async {
     final rows = await _db
@@ -82,6 +94,11 @@ class SupabaseRepo {
 // PROVIDERS
 // ----------------------
 final supabaseRepoProvider = Provider<SupabaseRepo>((ref) => SupabaseRepo());
+
+final provincesProvider = FutureProvider<List<ProvinceRow>>((ref) async {
+  final repo = ref.watch(supabaseRepoProvider);
+  return repo.fetchProvinces();
+});
 
 final schoolsProvider = FutureProvider<List<SchoolRow>>((ref) async {
   final repo = ref.watch(supabaseRepoProvider);

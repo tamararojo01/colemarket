@@ -83,8 +83,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ...myListings.map(
           (l) => ListTile(
             leading: const CircleAvatar(child: Icon(Icons.image)),
-            title: Text('\${l.title} · \${l.size}'),
-            subtitle: Text('\${l.price.toStringAsFixed(2)} €'),
+            title: const Text('\${l.title} · \${l.size}'),
+            subtitle: const Text('\${l.price.toStringAsFixed(2)} €'),
             trailing: Switch(value: l.active, onChanged: (_) {}),
           ),
         ),
