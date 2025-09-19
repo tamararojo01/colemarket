@@ -15,7 +15,7 @@ class BrandTitle extends StatelessWidget {
   const BrandTitle({super.key});
   @override
   Widget build(BuildContext context) {
-    final gradient = const LinearGradient(colors: [kGreen, Color(0xFF11C493)]);
+    const gradient = LinearGradient(colors: [kGreen, Color(0xFF11C493)]);
     return ShaderMask(
       shaderCallback: (rect) => gradient.createShader(rect),
       blendMode: BlendMode.srcIn,

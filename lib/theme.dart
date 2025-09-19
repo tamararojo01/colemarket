@@ -79,9 +79,9 @@ ThemeData buildAppTheme(Brightness brightness) {
       textStyle: const TextStyle(color: Colors.black87),
       inputDecorationTheme: base.inputDecorationTheme,
       menuStyle: MenuStyle(
-        backgroundColor: const MaterialStatePropertyAll(Colors.white),
-        side: const MaterialStatePropertyAll(BorderSide(color: kGreenSoft)),
-        shape: MaterialStatePropertyAll(
+        backgroundColor: const WidgetStatePropertyAll(Colors.white),
+        side: const WidgetStatePropertyAll(BorderSide(color: kGreenSoft)),
+        shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
@@ -96,16 +96,16 @@ ThemeData buildAppTheme(Brightness brightness) {
     // Botón principal (unificado)
     filledButtonTheme: FilledButtonThemeData(
       style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.disabled)) return kGreen.withOpacity(0.45);
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) return kGreen.withOpacity(0.45);
           return kGreen;
         }),
-        foregroundColor: const MaterialStatePropertyAll(Colors.white),
-        overlayColor: MaterialStatePropertyAll(kGreen.withOpacity(0.08)),
-        shape: MaterialStatePropertyAll(
+        foregroundColor: const WidgetStatePropertyAll(Colors.white),
+        overlayColor: WidgetStatePropertyAll(kGreen.withOpacity(0.08)),
+        shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        padding: const MaterialStatePropertyAll(
+        padding: const WidgetStatePropertyAll(
           EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
@@ -119,7 +119,7 @@ ThemeData buildAppTheme(Brightness brightness) {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ).copyWith(
-        overlayColor: MaterialStatePropertyAll(kGreen.withOpacity(0.08)),
+        overlayColor: WidgetStatePropertyAll(kGreen.withOpacity(0.08)),
       ),
     ),
 

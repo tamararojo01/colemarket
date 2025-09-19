@@ -52,7 +52,7 @@ final mockListings = <Listing>[
   Listing(
     id: 'l3',
     userId: 'u4',
-    schoolId: 'alcala',
+    schoolId: 'trinity-sanse',
     garmentId: 'chandal',
     title: 'Chándal completo',
     size: 'M',
